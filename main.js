@@ -13,7 +13,11 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
+  mainWindow = new BrowserWindow({width: 800, height: 600, webPreferences: {
+          nativeWindowOpen: true,
+          nodeIntegration: false,
+          preload: path.resolve(path.join(__dirname, "preload.js"))
+      }})
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
@@ -23,7 +27,16 @@ function createWindow () {
   }))
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
+
+    const openWindowHandler = (event, url, frameName, disposition, options, additionalFeatures) => {
+        event.preventDefault();
+        event.newGuest = new BrowserWindow(options);
+        event.newGuest.webContents.on("new-window", openWindowHandler);
+        event.newGuest.webContents.openDevTools();
+    };
+
+    mainWindow.webContents.on("new-window", openWindowHandler);
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
